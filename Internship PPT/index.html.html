@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abrar Akhunji - Internship Report Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- New font for headings: Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Define CSS Variables for the refined color palette */
+        :root {
+            --color-primary-dark-blue: #2C3E50; /* Pay Blue - Darker for text/accents */
+            --color-primary-light-blue: #3498DB; /* Pale Blue - Main accent/interactive */
+            --color-neutral-background: #F8FAFC; /* Light Blue-Gray for main background */
+            --color-neutral-section-bg: #FFFFFF; /* White for content sections */
+            --color-neutral-text: #4A5568; /* Slightly darker slate for body text */
+            --color-neutral-light-text: #718096; /* Lighter slate for secondary text */
+            --color-accent-green: #2ECC71;
+            --color-accent-yellow: #F1C40F;
+            --color-accent-orange: #E67E22;
+            --color-accent-red: #E74C3C;
+            --color-accent-purple: #9B59B6; /* For 3D sphere */
+        }
+
+        body {
+            font-family: 'Lato', sans-serif; /* Lato for body text */
+            background-color: var(--color-neutral-background);
+            color: var(--color-neutral-text);
+            /* Custom cursor for aesthetic appeal, falls back to auto */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="%233498DB" stroke="%23FFFFFF" stroke-width="2.5"/></svg>') 16 16, auto;
+        }
+
+        /* Apply Montserrat to all headings */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Ensure interactive elements still show pointer cursor */
+        a, button, .card-hover-effect, .tab-btn, [contenteditable="true"] {
+            cursor: pointer;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px; /* Adjusted height for larger screens */
+            }
+        }
+        .nav-link {
+            transition: color 0.3s ease-in-out;
+        }
+        .nav-link:hover {
+            color: var(--color-primary-light-blue);
+        }
+        .tab-btn {
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease-out;
+            border-radius: 0.5rem 0.5rem 0 0; /* Rounded top corners */
+        }
+        .tab-btn.active {
+            background-color: var(--color-primary-light-blue);
+            color: white;
+            transform: translateY(-2px); /* Slight lift */
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px); /* More pronounced slide */
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .animate-on-scroll.is-visible {
+            animation: fadeInSlideUp 0.9s ease-out forwards; /* Slightly slower for presentation feel */
+        }
+
+        /* Staggered animation for elements within a container */
+        .stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+        .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+
+        .timeline-item.is-visible .timeline-content {
+            animation: fadeInSlideUp 0.8s ease-out forwards;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            transform: translateX(-30px); /* More pronounced slide */
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            transform: translateX(30px); /* More pronounced slide */
+        }
+
+        .timeline-item.is-visible:nth-child(odd) .timeline-content,
+        .timeline-item.is-visible:nth-child(even) .timeline-content {
+            transform: translateX(0);
+        }
+
+        .card-hover-effect {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-8px); /* More lift on hover */
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 6px 10px -3px rgba(0, 0, 0, 0.05); /* Stronger shadow */
+        }
+
+        .tab-pane {
+            transition: opacity 0.3s ease-in-out;
+            min-height: 100px; /* Prevent layout shift when content is short */
+        }
+        .tab-pane.hidden {
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            pointer-events: none; /* Disable interaction when hidden */
+        }
+        .tab-pane.active {
+            opacity: 1;
+            height: auto;
+            pointer-events: auto;
+        }
+
+        /* Hero section specific styling for 3D canvas */
+        #hero {
+            position: relative;
+            overflow: hidden;
+            min-height: 70vh; /* Make hero section taller */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--color-primary-dark-blue) 0%, var(--color-primary-light-blue) 100%); /* Gradient background */
+            color: white;
+        }
+        #hero3DCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.15; /* Slightly more visible sphere */
+        }
+        #hero > *:not(canvas) {
+            position: relative;
+            z-index: 1;
+            padding: 2rem; /* Add padding for content */
+        }
+
+        /* Aesthetic highlight for main titles */
+        .aesthetic-title {
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
+            color: var(--color-primary-dark-blue); /* Default for sections */
+        }
+        #hero .aesthetic-title {
+            color: white; /* White for hero section */
+        }
+
+        /* Editable content styling */
+        [contenteditable="true"] {
+            outline: 2px dashed rgba(52, 152, 219, 0.3); /* Pale Blue dashed border */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: outline 0.2s ease-in-out;
+        }
+        [contenteditable="true"]:focus {
+            outline: 2px solid var(--color-primary-light-blue); /* Solid Pale Blue on focus */
+            background-color: rgba(52, 152, 219, 0.05); /* Light background on focus */
+        }
+
+        /* Architecture Diagram Styling */
+        .architecture-box {
+            background-color: var(--color-neutral-section-bg);
+            border: 1px solid var(--color-neutral-pale-slate);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .architecture-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+        }
+        .architecture-arrow {
+            color: var(--color-primary-light-blue);
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-lg">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-extrabold text-gray-900">Abrar Akhunji</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#hero" class="nav-link font-bold text-gray-700">Home</a>
+                <a href="#journey" class="nav-link font-bold text-gray-700">Journey</a>
+                <a href="#skills" class="nav-link font-bold text-gray-700">Skills</a>
+                <a href="#project" class="nav-link font-bold text-gray-700">Project</a>
+                <a href="#certificates" class="nav-link font-bold text-gray-700">Documents</a> <!-- New nav link -->
+                <a href="#reflections" class="nav-link font-bold text-gray-700">Reflections</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-700 focus:outline-none p-2 rounded-md hover:bg-gray-100">
+                     <span class="text-3xl">&#9776;</span>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-inner">
+            <a href="#hero" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Home</a>
+            <a href="#journey" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Journey</a>
+            <a href="#skills" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Skills</a>
+            <a href="#project" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Project</a>
+            <a href="#certificates" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Documents</a> <!-- New nav link -->
+            <a href="#reflections" class="block py-3 px-6 text-base text-gray-700 hover:bg-gray-100 font-medium">Reflections</a>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- Hero Section -->
+        <section id="hero" class="animate-on-scroll">
+            <canvas id="hero3DCanvas"></canvas>
+            <div class="relative z-10 max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight aesthetic-title leading-tight">
+                    Summer Internship <br>Completion Report
+                </h1>
+                <p class="mt-6 text-xl md:text-2xl font-light opacity-90">
+                    A comprehensive overview of my <span class="bg-yellow-300 text-gray-900 px-1 rounded">15-day journey</span> in Python with Django Development.
+                </p>
+                <div class="mt-10 flex flex-wrap justify-center items-center gap-x-10 gap-y-4 text-white text-lg font-medium">
+                    <span class="font-bold">Abrar Akhunji (230263116001)</span>
+                    <span class="hidden md:inline text-white/50">|</span>
+                    <span>B.E. (IT) 7th Sem, KIRC, GTU</span>
+                    <span class="hidden md:inline text-white/50">|</span>
+                    <span><span class="font-bold text-emerald-300">@</span> Brainybeam Info-Tech Pvt. Ltd.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Internship Journey Section -->
+        <section id="journey" class="py-24 bg-white rounded-lg shadow-xl my-12 container mx-auto px-6 animate-on-scroll">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold aesthetic-title">The Internship Journey</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    This section sets the stage, providing an overview of my role, the company's focus, and the intensive 15-day program timeline.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-10 text-center stagger-children">
+                <div class="bg-gray-50 p-8 rounded-xl shadow-md card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-2xl mb-3 text-gray-800">My Role</h3>
+                    <p class="text-gray-700 text-base leading-relaxed">
+                        Python with Django Intern, focused on backend development, database interaction, and building a functional web application from the ground up.
+                    </p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-xl shadow-md card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-2xl mb-3 text-gray-800">The Company</h3>
+                    <p class="text-gray-700 text-base leading-relaxed">
+                        Brainybeam Info-Tech Pvt. Ltd. is a dynamic IT solutions provider in Ahmedabad, dedicated to delivering "Better Brains for your Idea".
+                    </p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-xl shadow-md card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-2xl mb-3 text-gray-800">Duration</h3>
+                    <p class="text-gray-700 text-base leading-relaxed">
+                        A 15-day intensive program from <br>July 2nd to July 16th, 2025.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-20">
+                <h3 class="text-3xl font-bold text-center mb-12 aesthetic-title">15-Day Learning Timeline</h3>
+                <div class="relative w-full py-8">
+                    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full w-1 bg-gray-300 rounded-full"></div>
+                    <div class="relative flex items-center justify-between mb-12 group timeline-item">
+                        <div class="w-2/5 pr-8">
+                            <div class="bg-white p-6 rounded-lg shadow-lg text-right timeline-content border-l-4 border-primary-light-blue">
+                                <h4 class="font-bold text-xl text-gray-800 mb-2">Week 1: Foundations</h4>
+                                <p class="text-gray-600 text-sm">Deep dive into Django's MVT architecture, models, views, and templates. Setup development environment.</p>
+                            </div>
+                        </div>
+                        <div class="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary-light-blue z-10 transition-transform duration-300 group-hover:scale-150 border-4 border-white"></div>
+                         <div class="w-2/5 pl-8"></div>
+                    </div>
+                    <div class="relative flex items-center justify-between mb-12 group timeline-item">
+                         <div class="w-2/5 pr-8"></div>
+                        <div class="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary-light-blue z-10 transition-transform duration-300 group-hover:scale-150 border-4 border-white"></div>
+                        <div class="w-2/5 pl-8">
+                            <div class="bg-white p-6 rounded-lg shadow-lg timeline-content border-r-4 border-primary-light-blue">
+                                <h4 class="font-bold text-xl mb-2 text-gray-800">Week 2: Project Development</h4>
+                                <p class="text-gray-600 text-sm">Started development of the main internship project. Implemented core features and database schema.</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="relative flex items-center justify-between group timeline-item">
+                        <div class="w-2/5 pr-8">
+                            <div class="bg-white p-6 rounded-lg shadow-lg text-right timeline-content border-l-4 border-primary-light-blue">
+                                <h4 class="font-bold text-xl mb-2 text-gray-800">Week 3: Refinement & Completion</h4>
+                                <p class="text-gray-600 text-sm">Focused on debugging, refining features, and preparing the final project for presentation.</p>
+                            </div>
+                        </div>
+                        <div class="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary-light-blue z-10 transition-transform duration-300 group-hover:scale-150 border-4 border-white"></div>
+                         <div class="w-2/5 pl-8"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="py-24 bg-neutral-section-bg rounded-lg shadow-xl my-12 container mx-auto px-6 animate-on-scroll">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold aesthetic-title">Technology & Skill Growth</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    This section highlights the technologies I mastered and visualizes my significant skill development throughout the internship.
+                </p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="px-4 stagger-children">
+                    <h3 class="text-3xl font-bold mb-8 text-center lg:text-left aesthetic-title">Technology Stack</h3>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-6 rounded-lg card-hover-effect animate-on-scroll">
+                            <h4 class="font-bold text-xl text-gray-800 mb-1 aesthetic-title">Python & Django</h4>
+                            <p class="text-gray-700 text-sm">The core of my internship. Used for all backend logic, database operations via the ORM, and request/response handling.</p>
+                        </div>
+                         <div class="bg-gray-50 p-6 rounded-lg card-hover-effect animate-on-scroll">
+                            <h4 class="font-bold text-xl text-gray-800 mb-1 aesthetic-title">Database (SQLite)</h4>
+                            <p class="text-gray-700 text-sm">Utilized SQLite for rapid development and management of the application's data through Django Models.</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg card-hover-effect animate-on-scroll">
+                            <h4 class="font-bold text-xl text-gray-800 mb-1 aesthetic-title">Frontend (HTML/CSS/JS)</h4>
+                            <p class="text-gray-700 text-sm">Built user interfaces with standard web technologies, styled with Tailwind CSS for responsiveness.</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg card-hover-effect animate-on-scroll">
+                            <h4 class="font-bold text-xl text-gray-800 mb-1 aesthetic-title">Tools & Concepts</h4>
+                            <p class="text-sm text-gray-700">Gained experience with Git for version control, virtual environments, and understanding the MVT pattern.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="chart-container h-[400px] md:h-96 animate-on-scroll">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-gray-500 mt-6 px-4">An interactive radar chart illustrating my skill progression (out of 5) before and after the internship.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Showcase Section -->
+        <section id="project" class="py-24 bg-white rounded-lg shadow-xl my-12 container mx-auto px-6 animate-on-scroll">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold aesthetic-title">Internship Project Showcase</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    The centerpiece of my internship was the development of a full-stack web application. This section details its purpose, architecture, and key features.
+                </p>
+            </div>
+            <div class="bg-gray-50 p-10 rounded-lg shadow-inner animate-on-scroll">
+                <div class="text-center border-b pb-8 mb-8 border-gray-200">
+                    <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" contenteditable="true" id="project-title">Library Management System</h3>
+                    <p class="mt-2 text-lg text-gray-700 max-w-3xl mx-auto" contenteditable="true" id="project-description">
+                        A Django-based web application designed to manage library resources and user interactions, focusing on robust authentication and efficient database workflows.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12 items-start">
+                    <div class="stagger-children">
+                        <h4 class="font-bold text-2xl mb-6 text-gray-900 animate-on-scroll aesthetic-title">Project Objective</h4>
+                        <p class="text-gray-700 text-base leading-relaxed animate-on-scroll" contenteditable="true" id="project-objective">
+                            The primary goal of this project was to gain practical experience in implementing user authentication and managing database workflows within the Django framework. This involved understanding Django's ORM, user models, and secure data handling practices to build a functional library system.
+                        </p>
+
+                        <h4 class="font-bold text-2xl mb-6 mt-12 text-gray-900 animate-on-scroll aesthetic-title">Architecture (MVT Pattern)</h4>
+                        <p class="text-gray-700 mb-6 text-base animate-on-scroll">
+                            The project strictly adheres to Django's Model-View-Template (MVT) architectural pattern for clear separation of concerns.
+                        </p>
+                        <div class="space-y-4 text-sm animate-on-scroll">
+                            <div class="flex items-center justify-center gap-4 p-4 bg-blue-50 rounded-xl architecture-box">
+                                <div class="w-24 text-center font-extrabold text-primary-dark-blue text-base">User</div>
+                                <div class="architecture-arrow">&rarr;</div>
+                                <div class="w-24 text-center font-extrabold text-primary-dark-blue text-base">Browser</div>
+                                <div class="architecture-arrow">&rarr;</div>
+                                <div class="flex-1 text-center font-extrabold text-primary-dark-blue text-base">Django URL Dispatcher</div>
+                            </div>
+                             <div class="text-center architecture-arrow">&darr;</div>
+                             <div class="flex items-center justify-center gap-4 p-4 bg-blue-50 rounded-xl architecture-box">
+                                <div class="flex-1 text-center font-extrabold text-primary-dark-blue text-base">Views (Logic)</div>
+                                <div class="architecture-arrow">&harr;</div>
+                                <div class="flex-1 text-center font-extrabold text-primary-dark-blue text-base">Models (Data)</div>
+                                <div class="architecture-arrow">&harr;</div>
+                                <div class="flex-1 text-center font-extrabold text-primary-dark-blue text-base">Database</div>
+                            </div>
+                             <div class="text-center architecture-arrow">
+                                <span class="inline-block transform -rotate-90 origin-top-left -translate-x-4 translate-y-2">&rarr;</span>
+                                <span class="inline-block transform rotate-90 origin-top-right translate-x-4 translate-y-2">&larr;</span>
+                             </div>
+                             <div class="flex items-center justify-center gap-4 p-4 bg-blue-50 rounded-xl architecture-box">
+                                <div class="flex-1 text-center font-extrabold text-primary-dark-blue text-base">Templates (HTML)</div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="stagger-children">
+                        <h4 class="font-bold text-2xl mb-6 text-gray-900 animate-on-scroll aesthetic-title">Key Features</h4>
+                        <div class="flex border-b-2 border-primary-light-blue mb-6">
+                            <button class="tab-btn flex-1 p-4 text-base font-semibold text-gray-700 active" data-tab="feature1">Feature 1</button>
+                            <button class="tab-btn flex-1 p-4 text-base font-semibold text-gray-700" data-tab="feature2">Feature 2</button>
+                            <button class="tab-btn flex-1 p-4 text-base font-semibold text-gray-700" data-tab="feature3">Feature 3</button>
+                        </div>
+                        <div id="tab-content" class="space-y-6 text-gray-700 bg-gray-50 p-6 rounded-lg shadow-inner animate-on-scroll">
+                            <div class="tab-pane active" id="feature1">
+                                <h5 class="font-bold text-xl mb-2 text-gray-800" contenteditable="true">User Authentication & Authorization</h5>
+                                <p class="text-base leading-relaxed" contenteditable="true">
+                                    Implemented a complete user management system including user registration, login, logout, and password reset. Utilized Django's built-in authentication system and customized user models to handle different user roles (e.g., members, librarians) and their respective permissions for accessing library resources.
+                                </p>
+                            </div>
+                            <div class="tab-pane hidden" id="feature2">
+                                <h5 class="font-bold text-xl mb-2 text-gray-800" contenteditable="true">Book & Resource Management</h5>
+                                <p class="text-base leading-relaxed" contenteditable="true">
+                                    Developed models and views for managing various library resources such as books, magazines, and digital media. This includes functionalities for adding new items, updating existing records, and searching the catalog based on criteria like title, author, or genre. Focused on efficient database queries using Django ORM.
+                                </p>
+                            </div>
+                             <div class="tab-pane hidden" id="feature3">
+                                <h5 class="font-bold text-xl mb-2 text-gray-800" contenteditable="true">Borrowing & Return Workflow</h5>
+                                <p class="text-base leading-relaxed" contenteditable="true">
+                                    Created a system to track book borrowing and return processes. This involved linking users to borrowed items, recording due dates, and implementing logic for late returns. The feature highlights the practical application of database relationships and transaction management within Django.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Certificates & Offer Letter Section -->
+        <section id="certificates" class="py-24 bg-neutral-section-bg rounded-lg shadow-xl my-12 container mx-auto px-6 animate-on-scroll">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold aesthetic-title">Certificates & Offer Letter</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    Showcasing the official documents that mark the successful completion of my internship.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Completion Certificate -->
+                <div class="bg-gray-50 p-8 rounded-xl shadow-lg card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-2xl mb-4 text-gray-900 aesthetic-title">Internship Completion Certificate</h3>
+                    <div class="flex justify-center items-center h-64 bg-gray-200 rounded-lg overflow-hidden mb-4">
+                        <img src="Abrar%20Akhunji%20%20-%20Completion%20Certificate_page.jpg" alt="Abrar Akhunji - Completion Certificate" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <p class="text-gray-700 text-base leading-relaxed" contenteditable="true">
+                        This certificate, issued by Brainybeam Info-Tech Pvt. Ltd. on July 16th, 2025, certifies that Mr./Ms. Abrar Akhunji (230263116001), a student of Kalol Institute of Technology & Research Center (B.E.-IT), successfully completed a 15-day internship in Python with Django from July 2nd to July 16th, 2025.
+                    </p>
+                </div>
+
+                <!-- Offer Letter -->
+                <div class="bg-gray-50 p-8 rounded-xl shadow-lg card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-2xl mb-4 text-gray-900 aesthetic-title">Internship Offer Letter</h3>
+                    <div class="flex justify-center items-center h-64 bg-gray-200 rounded-lg overflow-hidden mb-4">
+                        <img src="Abrar%20Akhunji%20%20-%20Offer-Joining%20Letter_page.jpg" alt="Abrar Akhunji - Offer-Joining Letter" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <p class="text-gray-700 text-base leading-relaxed" contenteditable="true">
+                        This offer letter from Brainybeam Info-Tech Pvt. Ltd. extends an internship opportunity to Abrar Akhunji (230263116001) for Python with Django development. The 15-day internship commenced on July 2nd, 2025, with a Monday to Friday schedule, providing practical experience in ongoing projects.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reflections Section -->
+        <section id="reflections" class="py-24 bg-neutral-section-bg rounded-lg shadow-xl my-12 container mx-auto px-6 animate-on-scroll">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold aesthetic-title">Reflections & Key Learnings</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    Every project presents unique challenges and invaluable lessons. This section summarizes the hurdles I overcame and the most significant skills I acquired.
+                </p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-gray-50 p-10 rounded-xl shadow-lg card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-3xl mb-6 text-gray-900 aesthetic-title">Challenges & Solutions</h3>
+                    <div class="space-y-8">
+                        <div>
+                            <h4 class="font-semibold text-xl text-gray-800 mb-2" contenteditable="true">Designing Robust Database Schema</h4>
+                            <p class="text-gray-700 text-sm leading-relaxed" contenteditable="true">
+                                Initially, defining the optimal relationships between user, book, and borrowing models was complex. I overcame this by meticulously planning the database schema using ER diagrams and leveraging Django's powerful ORM to define `ForeignKey` and `ManyToManyField` relationships, ensuring data integrity and efficient queries.
+                            </p>
+                        </div>
+                        <div class="border-t border-gray-200 my-4"></div>
+                        <div>
+                            <h4 class="font-semibold text-xl text-gray-800 mb-2" contenteditable="true">Implementing Secure User Authentication</h4>
+                            <p class="text-gray-700 text-sm leading-relaxed" contenteditable="true">
+                                Ensuring secure and reliable user authentication was a critical challenge. I learned to utilize Django's built-in `auth` application, understanding its security features like password hashing and session management, which significantly streamlined the implementation and enhanced security.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-gray-50 p-10 rounded-xl shadow-lg card-hover-effect animate-on-scroll">
+                    <h3 class="font-bold text-3xl mb-6 text-gray-900 aesthetic-title">Key Learning Outcomes</h3>
+                    <ul class="list-disc list-inside space-y-4 text-gray-700 text-base leading-relaxed">
+                        <li><span class="font-bold">Mastering Django Workflow:</span> Gained a comprehensive understanding of Django's MVT architecture, URL routing, views, and templates by building a complete application.</li>
+                        <li><span class="font-bold">Advanced Database Interaction:</span> Proficiently used Django ORM for complex database operations, including creating, reading, updating, and deleting records, and managing relationships.</li>
+                        <li><span class="font-bold">Secure Authentication Implementation:</span> Learned best practices for user authentication and authorization, including customizing user models and handling permissions.</li>
+                        <li><span class="font-bold">Full-Stack Development Cycle:</span> Experienced the end-to-end process of developing a web application from design to deployment considerations.</li>
+                        <li><span class="font-bold">Problem-Solving & Debugging in Django:</span> Enhanced my ability to identify and resolve issues within a Django project, utilizing its debugging tools effectively.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 text-white mt-20">
+        <div class="container mx-auto px-6 py-10 text-center">
+            <p class="text-base font-light">
+                This interactive report was created by Abrar Akhunji to document the successful completion of the summer internship at Brainybeam Info-Tech Pvt. Ltd.
+            </p>
+            <p class="text-sm mt-4 text-gray-400">July 2025</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Close mobile menu on link click
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                     mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // Intersection Observer for scroll animations
+            const animateOnScrollElements = document.querySelectorAll('.animate-on-scroll');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1 // Trigger when 10% of the element is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        // For staggered children, add the class to each child
+                        if (entry.target.classList.contains('stagger-children')) {
+                            Array.from(entry.target.children).forEach((child, index) => {
+                                child.style.animationDelay = `${index * 0.1}s`; // Stagger delay
+                                child.classList.add('is-visible');
+                            });
+                        }
+                        observer.unobserve(entry.target); // Stop observing once animated
+                    }
+                });
+            }, observerOptions);
+
+            animateOnScrollElements.forEach(el => observer.observe(el));
+            timelineItems.forEach(el => observer.observe(el));
+
+            // Skills Chart
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            const skillsChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Python', 'Django', 'Database/ORM', 'HTML/CSS', 'JavaScript', 'Problem Solving'],
+                    datasets: [{
+                        label: 'Before Internship',
+                        data: [2, 1, 1, 3, 2, 2],
+                        backgroundColor: 'rgba(230, 126, 34, 0.3)', /* Accent Orange with opacity */
+                        borderColor: 'rgba(230, 126, 34, 1)',
+                        pointBackgroundColor: 'rgba(230, 126, 34, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(230, 126, 34, 1)'
+                    }, {
+                        label: 'After Internship',
+                        data: [4, 4, 4, 3, 3, 4],
+                        backgroundColor: 'rgba(52, 152, 219, 0.3)', /* Pale Blue with opacity */
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.15)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.15)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 14, // Larger font for presentation
+                                    weight: 'bold'
+                                },
+                                color: 'var(--color-neutral-text)'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: {
+                                stepSize: 1,
+                                backdropColor: 'transparent',
+                                color: 'var(--color-neutral-light-text)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                           position: 'top',
+                           labels: {
+                                color: 'var(--color-neutral-text)',
+                                font: {
+                                    size: 14, // Larger font for presentation
+                                    weight: 'bold'
+                                }
+                           }
+                        },
+                        tooltip: {
+                           enabled: true,
+                           bodyFont: {
+                                size: 14
+                           },
+                           titleFont: {
+                                size: 16,
+                                weight: 'bold'
+                           }
+                        }
+                    }
+                }
+            });
+
+            // Project Features Tabs
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Deactivate all buttons and panes
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.add('hidden'));
+
+                    // Activate clicked button
+                    button.classList.add('active');
+
+                    // Show corresponding pane with a slight delay for transition
+                    const targetTab = button.getAttribute('data-tab');
+                    const targetPane = document.getElementById(targetTab);
+                    setTimeout(() => {
+                        targetPane.classList.remove('hidden');
+                    }, 50); // Small delay for fade effect
+                });
+            });
+
+            // Three.js 3D Background for Hero Section
+            let scene, camera, renderer, sphere;
+
+            function init3D() {
+                const canvas = document.getElementById('hero3DCanvas');
+                const heroSection = document.getElementById('hero'); // Get the hero section element
+                if (!canvas || !heroSection) {
+                    console.error("3D Canvas or Hero section element not found!");
+                    return;
+                }
+
+                // Scene
+                scene = new THREE.Scene();
+
+                // Camera
+                // Use heroSection.clientHeight for camera aspect ratio
+                camera = new THREE.PerspectiveCamera(75, heroSection.clientWidth / heroSection.clientHeight, 0.1, 1000);
+                camera.position.z = 5;
+
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true }); // antialias for smoother edges
+                // Set renderer size based on heroSection dimensions
+                renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+
+                // Geometry
+                const geometry = new THREE.SphereGeometry(1.8, 48, 48); // Slightly larger, more segments for smoother look
+
+                // Material
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x9B59B6, /* Accent Purple */
+                    roughness: 0.4, // Less rough
+                    metalness: 0.6, // More metallic
+                    transparent: true,
+                    opacity: 0.7 // More opaque for better visibility against gradient
+                });
+
+                // Mesh
+                sphere = new THREE.Mesh(geometry, material);
+                scene.add(sphere);
+
+                // Lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Slightly brighter ambient
+                scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Brighter directional light
+                directionalLight.position.set(0, 1, 1).normalize(); // Normalized position
+                scene.add(directionalLight);
+
+                const pointLight = new THREE.PointLight(0xffffff, 0.5); // Add a point light for more dynamic lighting
+                pointLight.position.set(5, -5, 5);
+                scene.add(pointLight);
+
+
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize, false);
+
+                animate3D(); // Start the animation loop
+            }
+
+            function onWindowResize() {
+                const heroSection = document.getElementById('hero');
+                const canvas = document.getElementById('hero3DCanvas');
+                if (canvas && heroSection) {
+                    camera.aspect = heroSection.clientWidth / heroSection.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
+                }
+            }
+
+            function animate3D() {
+                requestAnimationFrame(animate3D);
+
+                if (sphere) {
+                    sphere.rotation.x += 0.0015; // Slightly faster rotation
+                    sphere.rotation.y += 0.0025; // Slightly faster rotation
+                }
+
+                renderer.render(scene, camera);
+            }
+
+            // Initialize 3D scene when the window loads
+            window.onload = function() {
+                init3D();
+            };
+        });
+    </script>
+</body>
+</html>
